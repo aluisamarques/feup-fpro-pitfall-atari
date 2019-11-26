@@ -13,7 +13,7 @@ Criar um clone do Pitfall Atari 2600 em Pygame
 
 #### UI
 
-![UI](https://github.com/fpro-feup/public/blob/master/assigns/ui.png)
+![UI](pitfall.jpg)
 
 ### Pacotes
 
