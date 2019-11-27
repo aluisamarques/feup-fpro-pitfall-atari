@@ -35,6 +35,7 @@ current_level = levels[0]
 # convert grid coordinates to screen coordinates
 objects = [{'x': 800*o['col']/12, 'y': 600*o['row']/16, **o} for o in current_level]
 ```
+1. **NIVEIS (cont.)**
    1. desenhamos os nossos objetos (desenhar os objetos)
       * sugestão: tamanho da janela=800x600, tamanho de cada imagem do objeto será múltiplo de 50 (e.g. cobra=50x50, buraco=350x50, jogador=25x100).
    1. desenhamos o fundo: arvores, plataforma, abismo
