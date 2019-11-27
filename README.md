@@ -27,13 +27,13 @@ Criar um clone do Pitfall Atari 2600 em Pygame
 ```
 levels = [
    # coordinates are defined as a 16x12 grid
-    [{'obj': 'hole', 'row': 5, 'col': 10}, {'obj': 'snake', 'row': 2, 'col': 5}],
+    [{'obj': 'hole', 'gx': 5, 'gy': 10}, {'obj': 'snake', 'gx': 2, 'gy': 5}],
     ...,
     ...,
 ]
 current_level = levels[0]
 # convert grid coordinates to screen coordinates
-objects = [{'x': 800*o['col']/12, 'y': 600*o['row']/16, **o} for o in current_level]
+objects = [{'x': 800*o['gx']/16, 'y': 600*o['gy']/12, **o} for o in current_level]
 ```
 1. **NIVEIS (cont.)**
    1. desenhamos os nossos objetos (desenhar os objetos)
