@@ -79,6 +79,8 @@ jumpdir = 0
 falling = False
 buraco_falling = False
 plataforma = 6
+climbing = False
+waiting = False
 
 nivel = 0
 mudar_nivel(nivel)
@@ -93,15 +95,29 @@ while running:
             running = False    
     
     screen.blit(screen_im,(0,0))
-    climbin = False
     # EVENTOS
     keys = pygame.key.get_pressed()
     if keys[pygame.K_q]:
         running = False
     if keys[pygame.K_RIGHT] and not (falling or jumptime > 0):
-        homem['x'] += 0.2*dt
+        if waiting:
+            jumpdir = 1
+            jumptime = 10 
+            climbing = False
+            plataforma = 6
+            waiting = False
+        elif not climbing:
+            homem['x'] += 0.2*dt
+    print('falling:', falling, 'jumptime:', jumptime, 'climbing:', climbing)
     if keys[pygame.K_LEFT] and not (falling or jumptime > 0):
-        homem['x'] -= 0.2*dt
+        if waiting:
+            jumpdir = -1 
+            jumptime = 10 
+            climbing = False
+            plataforma = 6
+            waiting = False
+        elif not climbing:
+            homem['x'] -= 0.2*dt
    # if keys[pygame.K_UP] and not(falling or jumptime > 0):
     #    climbing = True
         #homem['y'] -= 0.2*dt
@@ -121,6 +137,7 @@ while running:
             falling = True
         homem['y'] -= 0.1*dt
         homem['x'] += 0.2*dt*jumpdir
+
     if falling:
         homem['y'] += 0.1*dt
         if 12*homem['y']/600 >= plataforma:
@@ -147,6 +164,7 @@ while running:
             obj['x'] -= 1.5
 
     # COLISÕES
+    colidiu_escada = False
     for obj in objects:
         if obj['obj'] == 'wall':
             if collision(homem, obj):
@@ -164,12 +182,22 @@ while running:
                     plataforma = 10
                     
         if obj['obj'] == 'escada':
-            if homem['x'] > obj['x'] and homem['x'] + homem['w'] < obj['x'] + obj['w'] and plataforma == 10:                
+            if homem['x'] > obj['x'] and homem['x'] + homem['w'] < obj['x'] + obj['w'] and plataforma == 10:
+                colidiu_escada = True
                 if keys[pygame.K_UP] and not(falling or jumptime > 0):
-                    if homem['y']> 600*6/12: 
+                    climbing = True
+                    if homem['y'] > 600*6/12:
                         homem['y'] -= 0.2*dt
+                        waiting = False
+                    else:
+                        print('* DEIXA DE SUBIR')
+                        waiting = True
+                        #climbing = False
+                        #plataforma = 6
                         
-        
+    #if not colidiu_escada and climbing:
+    #    climbing = False
+    #    plataforma = 6
                            
     # DESENHO    
     for o in objects:
