@@ -12,15 +12,7 @@ pygame.init()
 
 screen = pygame.display.set_mode((800,600))
 screen_im = pygame.image.load("imagens/background.png")
-'''
-player_im = pygame.image.load("imagens/boneco.png")
-wall_im = pygame.image.load("imagens/muro.png")
-tronco_im = pygame.image.load("imagens/tronco.png")
-croc_im = pygame.image.load("imagens/crocordilo.png")
-lagoa_azul_im = pygame.image.load("imagens/lagoa azul.png")
-lagoa_negra_im = pygame.image.load("imagens/lagoa negra.png")
-escadas_im = pygame.image.load("imagens/escadas.png")
-'''
+
 
 imagens = {
     'homem': pygame.image.load("imagens/boneco.png"),
@@ -28,28 +20,79 @@ imagens = {
     'tronco': pygame.image.load("imagens/tronco.png"),
     'croc': pygame.image.load("imagens/crocordilo.png"),
     'escada': pygame.image.load("imagens/escadas.png"),
-    'homem_tronco': pygame.image.load("imagens/boneco2.png"),
-    'homem_salto': pygame.image.load("imagens/boneco2.png"),
+    'homem_salto': pygame.image.load("imagens/homemsalto.png"),
+    'lagoa_azul':pygame.image.load("imagens/lagoaazul.png"),
+    'buraco':pygame.image.load("imagens/buraco.png"),
+    'lagoa_negra':pygame.image.load("imagens/lagoanegra.png"),
+    'liana': pygame.image.load("imagens/liana.png"),
 }
 
 levels = [
 [
     {'obj':'wall','gx':12.5, 'gy':9.15},
-    {'obj':'escada','gx':5,'gy':7.48},
-    {'obj':'tronco','gx':10,'gy':7.2},
+    {'obj':'escada','gx':7,'gy':7.48},
+    {'obj':'tronco','gx':12,'gy':7.2},
     {'obj':'homem', 'gx':1, 'gy':6},
 ],
 [ 
     {'obj':'wall','gx':12.5, 'gy':9.15},
-    {'obj':'escada','gx':5,'gy':7.48},
+    {'obj':'escada','gx':7,'gy':7.48},
+    {'obj':'buraco', 'gx': 3, 'gy':7.48},
+    {'obj':'buraco', 'gx': 10.5, 'gy':7.48},
     {'obj':'tronco','gx':10,'gy':7.2},
+    {'obj':'tronco','gx':11,'gy':7.2},
     {'obj':'homem', 'gx':1, 'gy':6},
+
+],
+[
+    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},
+    {'obj': 'lagoa_negra', 'gx':5, 'gy':7.5} ,
+    {"obj": "liana", "gx":8, "gy":3, "theta": 0},
+    {'obj': 'tronco', 'gx': 5, 'gy': 7.2},
+    {"obj": 'homem', "gx":1,"gy":6},
+
+],
+[
+    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},   
+    {'obj':'lagoa_azul', 'gx':5, "gy":7.5},
+    {'obj': 'croc', 'gx': 5.5, 'gy': 7.5},
+    {'obj': 'croc', 'gx': 7.5, 'gy': 7.5},
+    {'obj': 'croc', 'gx': 9.5, 'gy': 7.5},
+    {'obj': 'tronco', 'gx': 5, 'gy': 7.2},
+    {"obj": 'homem', "gx":1,"gy":6}, 
+],
+[
+    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},
+    {'obj': 'tronco', 'gx': 5, 'gy': 7.2},
+    {'obj': 'croc', 'gx': 7, 'gy': 7},
+    {"obj": 'homem', "gx":1,"gy":6}, 
+
+],
+[ 
+    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},
+    {'obj': 'tronco', 'gx': 5, 'gy': 8},
+    {'obj': 'croc', 'gx': 7, 'gy': 7},
+    {"obj": 'homem', "gx":1,"gy":6}, 
+    
+], 
+[
+    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},
+    {'obj': 'tronco', 'gx': 5, 'gy': 8},
+    {'obj': 'croc', 'gx': 7, 'gy': 7},
+    {"obj": 'homem', "gx":1,"gy":6}, 
 ],
 [
     {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},
     {'obj': 'tronco', 'gx': 5, 'gy': 8},
     {'obj': 'croc', 'gx': 7, 'gy': 7},
-    {"obj": 'homem', "gx":1,"gy":6},]
+    {"obj": 'homem', "gx":1,"gy":6}, 
+],
+[
+    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},
+    {'obj': 'tronco', 'gx': 5, 'gy': 8},
+    {'obj': 'croc', 'gx': 7, 'gy': 7},
+    {"obj": 'homem', "gx":1,"gy":6}, 
+]
 ]
 
 def overlaps(x1, y1, w1, h1, x2, y2, w2, h2):
@@ -69,8 +112,11 @@ def mudar_nivel(nivel):
                 'h': imagens[o['obj']].get_height(), **o} for o in current_level]
     homem = [o for o in objects if o['obj'] == 'homem'][0]
    
-        
+LARGURA_LIANA = 300
+THETA0_LIANA = 60*math.pi/180
+LIANA_G = 4*10
 
+colisao = False
 current_level = None
 objects = None
 homem = None
@@ -99,7 +145,8 @@ while running:
     keys = pygame.key.get_pressed()
     if keys[pygame.K_q]:
         running = False
-    if keys[pygame.K_RIGHT] and not (falling or jumptime > 0):
+        
+    if keys[pygame.K_RIGHT] and not (falling or jumptime > 0 and not collision):
         if waiting:
             jumpdir = 1
             jumptime = 10 
@@ -108,8 +155,8 @@ while running:
             waiting = False
         elif not climbing:
             homem['x'] += 0.2*dt
-    print('falling:', falling, 'jumptime:', jumptime, 'climbing:', climbing)
-    if keys[pygame.K_LEFT] and not (falling or jumptime > 0):
+            
+    if keys[pygame.K_LEFT] and not (falling or jumptime > 0 and not collision):
         if waiting:
             jumpdir = -1 
             jumptime = 10 
@@ -118,9 +165,7 @@ while running:
             waiting = False
         elif not climbing:
             homem['x'] -= 0.2*dt
-   # if keys[pygame.K_UP] and not(falling or jumptime > 0):
-    #    climbing = True
-        #homem['y'] -= 0.2*dt
+  
     if keys[pygame.K_SPACE]:
         if 12*homem['y']/600 >= plataforma:
             jumptime = 10
@@ -160,26 +205,34 @@ while running:
         mudar_nivel(nivel)
     # FISICA
     for obj in objects:
-        if obj['obj'] == 'tronco':
+        if obj['obj'] == 'tronco' and nivel != 0:
             obj['x'] -= 1.5
+        if obj['obj'] == 'liana':
+            # https://pt.wikipedia.org/wiki/Equa%C3%A7%C3%A3o_do_p%C3%AAndulo
+            t = pygame.time.get_ticks()/1000
+            g = LIANA_G
+            l = LARGURA_LIANA
+            obj['theta'] = THETA0_LIANA*math.cos(math.sqrt(g/l)*t)
 
     # COLISÕES
     colidiu_escada = False
     for obj in objects:
         if obj['obj'] == 'wall':
-            if collision(homem, obj):
+            if collision(homem, obj) :
                 if homem['x'] < obj['x']:
                     homem['x'] = obj['x'] - homem['w']
                 else:
                     homem['x'] = obj['x'] - obj['w']
+                    
         if obj['obj'] in ('escada', 'buraco'):
             if homem['x'] > obj['x'] and homem['x']+homem['w'] < obj['x']+obj['w'] and plataforma == 6 and not falling and jumptime == 0:
                 plataforma = 10
                 falling = True
                 buraco_falling = True
-        if obj['obj'] in ('lagoa azul', 'lagoa negra'):
-                if homem['x'] > obj['x'] and homem['x']+homem['w'] < obj['x']+obj['w']:
-                    plataforma = 10
+                
+        if obj['obj'] in ['lagoa_negra', 'lagoa_azul']:
+            if collision(obj, homem):
+                homem['y'] += 1
                     
         if obj['obj'] == 'escada':
             if homem['x'] > obj['x'] and homem['x'] + homem['w'] < obj['x'] + obj['w'] and plataforma == 10:
@@ -190,22 +243,33 @@ while running:
                         homem['y'] -= 0.2*dt
                         waiting = False
                     else:
-                        print('* DEIXA DE SUBIR')
                         waiting = True
                         #climbing = False
                         #plataforma = 6
-                        
-    #if not colidiu_escada and climbing:
-    #    climbing = False
-    #    plataforma = 6
-                           
+        if obj['obj']== 'tronco':
+            if collision(obj, homem):
+                colisao = True
+                #if colisao == True:
+                 #   homem['y'] = 345
+                
+                
+            else:colisao = False
+            
+            if obj['x']<0:
+                obj['x'] = 800
+
     # DESENHO    
     for o in objects:
-        if o['obj'] != 'homem':
+        if o['obj'] == 'liana':
+            pos_i = (o['x'], o['y'])
+            pos_f = (o['x']+math.cos(math.pi/2-o['theta'])*LARGURA_LIANA,
+                     o['y']+math.sin(math.pi/2-o['theta'])*LARGURA_LIANA)
+            pygame.draw.line(screen, pygame.Color('brown'), pos_i, pos_f, 3)          
+        elif o['obj'] != 'homem':
             img = imagens[o['obj']]
             screen.blit(img, (o['x'], o['y']))
                 
-    if jumptime != 0 or (falling and not homem['y'] < 600*plataforma/12 - homem['h']):
+    if jumptime != 0 or (falling and not homem['y'] < 600*plataforma/12 - homem['h']) or colisao: 
         screen.blit(imagens['homem_salto'], (o['x'], o['y']))
     else:
         screen.blit(imagens['homem'], (o['x'], o['y']))
