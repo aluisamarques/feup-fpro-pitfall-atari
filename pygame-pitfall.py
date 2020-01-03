@@ -105,14 +105,16 @@ def collision(o1, o2):
                     o2['x'], o2['y'], img2.get_width(), img2.get_height())
 
 def mudar_nivel(nivel):
-    global current_level, objects, homem
+    global current_level, objects, homem, liana
     current_level = levels[nivel%len(levels)]
     objects = [{'x': 800*o['gx']/16, 'y': 600*o['gy']/12,
                 'w': imagens[o['obj']].get_width(),
                 'h': imagens[o['obj']].get_height(), **o} for o in current_level]
     homem = [o for o in objects if o['obj'] == 'homem'][0]
+    lianas = [o for o in objects if o['obj'] == 'liana']
+    liana = lianas[0] if lianas else None
    
-LARGURA_LIANA = 300
+LARGURA_LIANA = 200
 THETA0_LIANA = 60*math.pi/180
 LIANA_G = 4*10
 
@@ -120,13 +122,20 @@ colisao = False
 current_level = None
 objects = None
 homem = None
+liana = None
 jumptime = 0
 jumpdir = 0
+plataforma = 6
+
+buraco_falling = False
+status = None
+old_theta = 0
+'''
 falling = False
 buraco_falling = False
-plataforma = 6
 climbing = False
 waiting = False
+'''
 
 nivel = 0
 mudar_nivel(nivel)
@@ -146,28 +155,26 @@ while running:
     if keys[pygame.K_q]:
         running = False
         
-    if keys[pygame.K_RIGHT] and not (falling or jumptime > 0 and not collision):
-        if waiting:
+    if keys[pygame.K_RIGHT] and not (status == 'falling' or jumptime > 0 and not collision):
+        if status == 'waiting':
             jumpdir = 1
-            jumptime = 10 
-            climbing = False
+            jumptime = 10
             plataforma = 6
-            waiting = False
-        elif not climbing:
+            status = None
+        elif status != 'climbing':
             homem['x'] += 0.2*dt
             
-    if keys[pygame.K_LEFT] and not (falling or jumptime > 0 and not collision):
-        if waiting:
+    if keys[pygame.K_LEFT] and not (status == 'falling' or jumptime > 0 and not collision):
+        if status == 'waiting':
             jumpdir = -1 
-            jumptime = 10 
-            climbing = False
+            jumptime = 10
             plataforma = 6
-            waiting = False
-        elif not climbing:
+            status = None
+        elif status != 'climbing':
             homem['x'] -= 0.2*dt
   
     if keys[pygame.K_SPACE]:
-        if 12*homem['y']/600 >= plataforma:
+        if 12*homem['y']/600 >= plataforma and status is None:
             jumptime = 10
             if keys[pygame.K_RIGHT]:
                 jumpdir = 1
@@ -176,17 +183,21 @@ while running:
             else:
                 jumpdir = 0
 
+    if keys[pygame.K_DOWN] and status == 'liana':
+        jumpdir = -1 if liana['theta'] - old_theta < 0 else 1
+        status = 'falling'
+
     if jumptime != 0:
         jumptime -= 1
         if jumptime == 0:
-            falling = True
+            status = 'falling'
         homem['y'] -= 0.1*dt
         homem['x'] += 0.2*dt*jumpdir
 
-    if falling:
+    if status == 'falling':
         homem['y'] += 0.1*dt
         if 12*homem['y']/600 >= plataforma:
-            falling = False
+            status = None
             buraco_falling = False
         if not buraco_falling:
             homem['x'] += 0.2*dt*jumpdir
@@ -212,10 +223,10 @@ while running:
             t = pygame.time.get_ticks()/1000
             g = LIANA_G
             l = LARGURA_LIANA
+            old_theta = obj['theta']
             obj['theta'] = THETA0_LIANA*math.cos(math.sqrt(g/l)*t)
 
     # COLISÕES
-    colidiu_escada = False
     for obj in objects:
         if obj['obj'] == 'wall':
             if collision(homem, obj) :
@@ -225,9 +236,9 @@ while running:
                     homem['x'] = obj['x'] - obj['w']
                     
         if obj['obj'] in ('escada', 'buraco'):
-            if homem['x'] > obj['x'] and homem['x']+homem['w'] < obj['x']+obj['w'] and plataforma == 6 and not falling and jumptime == 0:
+            if homem['x'] > obj['x'] and homem['x']+homem['w'] < obj['x']+obj['w'] and plataforma == 6 and status != 'falling' and jumptime == 0:
                 plataforma = 10
-                falling = True
+                status = 'falling'
                 buraco_falling = True
                 
         if obj['obj'] in ['lagoa_negra', 'lagoa_azul']:
@@ -236,29 +247,35 @@ while running:
                     
         if obj['obj'] == 'escada':
             if homem['x'] > obj['x'] and homem['x'] + homem['w'] < obj['x'] + obj['w'] and plataforma == 10:
-                colidiu_escada = True
-                if keys[pygame.K_UP] and not(falling or jumptime > 0):
-                    climbing = True
+                if keys[pygame.K_UP] and not(status == 'falling' or jumptime > 0):
+                    status = 'climbing'
                     if homem['y'] > 600*6/12:
                         homem['y'] -= 0.2*dt
-                        waiting = False
                     else:
-                        waiting = True
+                        status = 'waiting'
                         #climbing = False
                         #plataforma = 6
         if obj['obj']== 'tronco':
-            if collision(obj, homem):
-                colisao = True
-                #if colisao == True:
-                 #   homem['y'] = 345
-                
-                
-            else:colisao = False
-            
-            if obj['x']<0:
+            colisao = collision(obj, homem)
+            if obj['x'] < 0:
                 obj['x'] = 800
 
-    # DESENHO    
+    # testar colisao jogador e liana
+    mao_x = homem['x'] + 25/2
+    mao_y = homem['y'] + 25
+    if liana and status != 'falling' and (mao_x-liana['x'])**2+(mao_y-liana['y'])**2 <= LARGURA_LIANA**2:
+        dx = mao_x - liana['x']
+        dy = mao_y - liana['y']
+        theta_homem = math.pi/2 - math.atan2(dy, dx)
+        pygame.display.set_caption('angulo homem: %f, liana: %f' % (theta_homem, liana['theta']))
+        if abs(theta_homem-liana['theta']) < 0.3:
+            status = 'liana'
+            jumptime = 0
+    if status == 'liana':
+        homem['x'] = liana['x']+math.cos(math.pi/2-liana['theta'])*LARGURA_LIANA-25/2
+        homem['y'] = liana['y']+math.sin(math.pi/2-liana['theta'])*LARGURA_LIANA-25
+
+    # DESENHO
     for o in objects:
         if o['obj'] == 'liana':
             pos_i = (o['x'], o['y'])
@@ -269,7 +286,7 @@ while running:
             img = imagens[o['obj']]
             screen.blit(img, (o['x'], o['y']))
                 
-    if jumptime != 0 or (falling and not homem['y'] < 600*plataforma/12 - homem['h']) or colisao: 
+    if jumptime != 0 or (status == 'falling' and not homem['y'] < 600*plataforma/12 - homem['h']) or colisao: 
         screen.blit(imagens['homem_salto'], (o['x'], o['y']))
     else:
         screen.blit(imagens['homem'], (o['x'], o['y']))
