@@ -27,6 +27,7 @@ imagens = {
     'lagoa_negra':pygame.image.load("imagens/lagoanegra.png"),
     'gato': pygame.image.load('imagens/gato.png'),
     'homem_salto_e': pygame.image.load('imagens/3.png'),
+    'liana': pygame.image.load('imagens/liana.png'),
 }
 
 imagens_direita = [
