@@ -22,8 +22,8 @@ Criar um clone do Pitfall Atari 2600 em Pygame
 #### Tarefas
 
 1. **NIVEIS**
-   1. os níveis são naturalmente uma lista, sendo que cada nível é por si também uma lista dum dicionário com os objetos.
-      * sugestão: cada nível é uma grelha 16x12, que é convertida para objetos em pixels.
+   1. os níveis são naturalmente uma lista, sendo que cada nível é por si também uma lista de um dicionário com os objetos.
+      cada nível é uma grelha 16x12, que é convertida para objetos em pixels.
 ```
 levels = [
    # coordinates are defined as a 16x12 grid
@@ -36,19 +36,20 @@ current_level = levels[0]
 objects = [{'x': 800*o['gx']/16, 'y': 600*o['gy']/12, **o} for o in current_level]
 ```
 1. **NIVEIS (cont.)**
-   1. desenhamos os nossos objetos (desenhar os objetos)
-      * sugestão: tamanho da janela=800x600, tamanho de cada imagem do objeto será múltiplo de 50 (e.g. cobra=50x50, buraco=350x50, jogador=25x100).
-   1. desenhamos o fundo: arvores, plataforma, abismo
-1. **JOGADOR**
+   1. desenhar os objetos : jogador, tronco, escorpião, lago, pântano, liana
+   2. desenhar o fundo: árvores, abismos, escadas, muro
+2. **JOGADOR**
    1. desenhar o jogador: pos_x, pos_y
-   1. controlo esquerda-direita
-   1. tecla space: salto_tempo = 50
-   1. quando nao salta gravidade: pos_y += vel_y
-   1. parar gravidade quando existe plataforma
-1. **INTERACÇÃO**
+   2. controlo esquerda-direita
+   3. tecla space: salto_tempo = 50
+   4. quando nao salta gravidade: pos_y += vel_y
+   5. parar gravidade quando existe plataforma
+3. **INTERACÇÃO**
    1. bounding-box entre tronco-jogador, jogador-objeto
-   1. escada
-1. **LIANA**
-   1. movimento trignometrico dentro de certos limites
+   2. escada
+   3. lago (jogador afunda no lago  evolta a posição inicial do nível)
+   4. liana (jogador realiza trajetória da liana) 
+4. **LIANA**
+   1. movimento trignometrico
 
-### 11/2019
+### 11/2019 a 01/2020
