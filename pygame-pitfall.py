@@ -209,18 +209,24 @@ while running:
         if not buraco_falling:
             homem['x'] += 0.2*dt*jumpdir
 
+    if homem['x'] + homem['w'] >= 800:
+        if plataforma == 10:
+            homem['x'] = 750
     if homem['x'] > 800:
-        nivel += 1
-        if nivel == len(levels):
-            nivel = 0
-        mudar_nivel(nivel)
-        homem['x'] = -homem['w']
+            nivel += 1
+            if nivel == len(levels):
+                nivel = 0
+            mudar_nivel(nivel)
+            homem['x'] = -homem['w']
     elif homem['x'] + homem['w'] < 0:
-        nivel -= 1
-        homem['x'] = 700
-        if nivel < 0:
-            nivel = len(levels)-1
-        mudar_nivel(nivel)
+        if plataforma == 10:
+            homem['x'] = 0
+        else:
+            nivel -= 1
+            homem['x'] = 700
+            if nivel < 0:
+                nivel = len(levels)-1
+            mudar_nivel(nivel)
             
     if gato == 0:
         imagens['gato'] = pygame.image.load('imagens/gato_2.png')
