@@ -61,7 +61,6 @@ levels = [
     {'obj':'homem', 'gx':1, 'gy':6},
 ],
 [
-    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},
     {'obj': 'lagoa_negra', 'gx':5, 'gy':7.5} ,
     {"obj": "liana", "gx":8, "gy":2, "theta": 0},
     {'obj': 'tronco', 'gx': 5, 'gy': 7.2},
@@ -69,11 +68,10 @@ levels = [
     {"obj": 'homem', "gx":1,"gy":6},
 ],
 [
-    {'obj': 'wall', 'gx': 12.5, 'gy': 9.15},   
     {'obj':'lagoa_azul', 'gx':5, "gy":7.5},
     {'obj': 'croc', 'gx': 6, 'gy': 7.5},
     {'obj': 'croc', 'gx': 8.2, 'gy': 7.5},
-    {'obj': 'croc', 'gx': 10.4, 'gy': 7.5},
+    {'obj': 'croc', 'gx': 10, 'gy': 7.5},
     {'obj':'gato', 'gx':1, 'gy':10.65},
     {"obj": 'homem', "gx":1,"gy":6}, 
 ],
@@ -107,8 +105,6 @@ def mudar_nivel(nivel):
     homem = [o for o in objects if o['obj'] == 'homem'][0]
     lianas = [o for o in objects if o['obj'] == 'liana']
     liana = lianas[0] if lianas else None
-
-
    
 LARGURA_LIANA = 250
 THETA0_LIANA = 60*math.pi/180
@@ -130,6 +126,7 @@ buraco_falling = False
 status = None
 old_theta = 0
 score = 500
+vidas = 3
 font = pygame.font.Font(None,30)
 
 anim_time = pygame.time.get_ticks()
@@ -148,6 +145,8 @@ while running:
     
     #EVENTOS
     texto = font.render(str(score),100,(255,255,255))
+    texto_1 = font.render(str(vidas),100,(255,255,255))
+    
     keys = pygame.key.get_pressed()
     if keys[pygame.K_q]:
         running = False
@@ -195,7 +194,6 @@ while running:
             jumpdir = -1 if liana['theta'] - old_theta < 0 else 1
             status = 'falling'
 
-
     if jumptime != 0:
         jumptime -= 1
         if jumptime == 0:
@@ -211,20 +209,19 @@ while running:
         if not buraco_falling:
             homem['x'] += 0.2*dt*jumpdir
 
-    if homem['x'] > 800 :
+    if homem['x'] > 800:
         nivel += 1
         if nivel == len(levels):
             nivel = 0
         mudar_nivel(nivel)
         homem['x'] = -homem['w']
-    elif homem['x'] + homem['w'] < 0 :
+    elif homem['x'] + homem['w'] < 0:
         nivel -= 1
         homem['x'] = 700
         if nivel < 0:
             nivel = len(levels)-1
         mudar_nivel(nivel)
-        
-    
+            
     if gato == 0:
         imagens['gato'] = pygame.image.load('imagens/gato_2.png')
     if gato == 1:
@@ -232,22 +229,29 @@ while running:
         
     if score < 0:
         score = SCORE
+    
+    if vidas == 0:
+        nivel = 0
+        mudar_nivel(nivel)
+        vidas = 3
+        
     if status != None:
         if dir == 0:
             imagens['homem'] = pygame.image.load('imagens/6d.png')
         if dir == 1:
             imagens['homem'] = pygame.image.load('imagens/6.png')
     
-        
     # FISICA
     for obj in objects:
         if obj['obj'] in ['tronco','tronco_1', 'tronco_2'] and nivel != 0:
             obj['x'] -= 2.5
+            
         if obj['obj'] == 'gato':
             if gato == 1:
                 obj['x'] += 1.5 
             if gato == 0:
                 obj['x'] -= 1.5
+                
         if obj['obj'] == 'liana':
             # https://pt.wikipedia.org/wiki/Equa%C3%A7%C3%A3o_do_p%C3%AAndulo
             t = pygame.time.get_ticks()/1000
@@ -275,8 +279,6 @@ while running:
                 if obj1['obj'] == 'gato':
                     if collision(obj1, obj):
                         gato = 0
-                    if obj1['x'] < 0:
-                        gato = 1
                     
         if obj['obj'] in ('escada', 'buraco'):
             if homem['x'] > obj['x'] and homem['x']+homem['w'] < obj['x']+obj['w'] and plataforma == 6 and status != 'falling' and jumptime == 0:
@@ -295,15 +297,16 @@ while running:
                 homem['y'] += 0.1*dt
                 if status == 'lagoa' and homem['y'] > 405:
                     score -= round(0.2*dt)
-                    if score < 0:
+                    vidas -= 1
+                    if score < 0 or vidas <0:
                         score = SCORE
+                        vidas = SCORE
                     homem['x'] = 50
                     homem['y'] = 50
                     status = None
                     while homem['y'] < 300:
                         homem['y'] += 0.1
-                    
-                    
+                     
         if obj['obj'] == 'escada':
             if homem['x'] > obj['x'] and homem['x'] + homem['w'] < obj['x'] + obj['w'] and plataforma == 10:
                 if keys[pygame.K_UP] and not(status == 'falling' or jumptime > 0):
@@ -327,9 +330,11 @@ while running:
                 score -= round(0.03*dt)
                 if score < 0 :
                     score = SCORE
+            if obj['x'] + obj['w']> 800:
+                gato = 0
+            if obj['x'] < 0:
+                gato = 1
         
-
-
     # testar colisao jogador e liana
     mao_x = homem['x'] + 25/2
     mao_y = homem['y'] + 25
@@ -337,7 +342,6 @@ while running:
         dx = mao_x - liana['x']
         dy = mao_y - liana['y']
         theta_homem = math.pi/2 - math.atan2(dy, dx)
-        #pygame.display.set_caption('angulo homem: %f, liana: %f' % (theta_homem, liana['theta']))
         if abs(theta_homem-abs(liana['theta'])) < 0.9 :
             status = 'liana'
             jumptime = 0
@@ -348,6 +352,7 @@ while running:
     # DESENHO
     screen.blit(screen_im,(0,0))
     screen.blit(texto, (50,30))
+    screen.blit(texto_1,(50,50))
     for o in objects:
         if o['obj'] == 'liana':
             pos_i = (o['x'], o['y'])
@@ -357,9 +362,8 @@ while running:
         
         elif o['obj'] != 'homem':
             img = imagens[o['obj']]
-            screen.blit(img, (o['x'], o['y']))
+            screen.blit(img, (o['x'], o['y']))      
         
-                
     if jumptime != 0 or (status == 'falling' and not homem['y'] < 600*plataforma/12 - homem['h']) or (colisao and status == None): 
         if dir==0:
             screen.blit(imagens['homem_salto'], (o['x'], o['y']))
@@ -369,6 +373,5 @@ while running:
         img = imagens['homem']
         screen.blit(img, (o['x'] - img.get_width()/2 + o['w']/2, o['y'] - img.get_height() + o['h']))
     pygame.display.update()
-    
     
 pygame.quit()
