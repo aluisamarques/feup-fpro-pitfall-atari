@@ -279,7 +279,7 @@ while running:
                 if homem['x'] < obj['x']:
                     homem['x'] = obj['x'] - homem['w'] - 40
                 else:
-                    homem['x'] = obj['x'] - obj['w']
+                    homem['x'] = obj['x'] + obj['w'] + 40
                     
             for obj1 in objects:
                 if obj1['obj'] == 'gato':
