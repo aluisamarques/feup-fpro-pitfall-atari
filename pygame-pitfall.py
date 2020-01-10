@@ -211,7 +211,7 @@ while running:
 
     if homem['x'] + homem['w'] >= 800:
         if plataforma == 10:
-            homem['x'] = 750
+            homem['x'] = 740
     if homem['x'] > 800:
             nivel += 1
             if nivel == len(levels):
@@ -277,7 +277,7 @@ while running:
         if obj['obj'] == 'wall':
             if collision(homem, obj) :
                 if homem['x'] < obj['x']:
-                    homem['x'] = obj['x'] - homem['w']
+                    homem['x'] = obj['x'] - homem['w'] - 40
                 else:
                     homem['x'] = obj['x'] - obj['w']
                     
